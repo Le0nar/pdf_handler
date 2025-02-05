@@ -15,6 +15,11 @@ func NewService() *Service {
 }
 
 func (s *Service) CreateTicket(ticket ticket.Ticket) error {
+	// 1) Create PDF
+	CreatePDF(ticket)
+
+	// 2) Save to Minio
+
 	return nil
 }
 
