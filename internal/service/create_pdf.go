@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Le0nar/pdf_handler/internal/ticket"
 	"github.com/jung-kurt/gofpdf"
@@ -40,8 +41,22 @@ func CreatePDF(ticket ticket.Ticket) error {
 	pdf.Ln(8)
 	pdf.Cell(0, 10, fmt.Sprintf("Price: $%.2f", ticket.Price))
 
+	// Создаем папку для временного хранения
+	_, err := os.Stat("temp_storage")
+	if os.IsNotExist(err) {
+		// Папка не существует, создаем ее
+		err := os.Mkdir("temp_storage", 0755)
+		if err != nil {
+			fmt.Println("Ошибка при создании папки:", err)
+		}
+		fmt.Println("Папка успешно создана!")
+	} else if err != nil {
+		// Если возникла другая ошибка
+		fmt.Println("Ошибка при проверке папки:", err)
+	}
+
 	// Сохраняем PDF в файл
-	err := pdf.OutputFileAndClose("ticket.pdf")
+	err = pdf.OutputFileAndClose("temp_storage/ticket_" + ticket.ID.String() + ".pdf")
 	if err != nil {
 		return fmt.Errorf("error saving PDF: %w", err)
 	}

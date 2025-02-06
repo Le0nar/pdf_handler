@@ -5,13 +5,17 @@ import (
 
 	"github.com/Le0nar/pdf_handler/internal/ticket"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go"
 )
 
 type Service struct {
+	S3Storage *minio.Client
 }
 
 func NewService() *Service {
-	return &Service{}
+	return &Service{
+		S3Storage: initS3Storage(),
+	}
 }
 
 func (s *Service) CreateTicket(ticket ticket.Ticket) error {
