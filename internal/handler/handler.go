@@ -1,18 +1,21 @@
 package handler
 
 import (
+	"fmt"
+	"io"
+	"log"
 	"net/http"
-	"os"
 
 	"github.com/Le0nar/pdf_handler/internal/ticket"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go"
 )
 
 type service interface {
 	CreateTicket(ticket ticket.Ticket) error
-	GetTicket(id uuid.UUID) (*os.File, error)
+	GetTicket(id uuid.UUID) (*minio.Object, string, error)
 }
 
 type Handler struct {
@@ -61,15 +64,35 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 func (h *Handler) GetTicket(c *gin.Context) {
 	// TODO: придумать как корерктно отдать файл
 
-	// stringedId := c.Param("id")
+	stringedId := c.Param("id")
 
-	// id, err := uuid.Parse(stringedId)
-	// if err != nil {
-	// 	http.Error(c.Writer, err.Error(), http.StatusBadRequest)
-	// 	return
-	// }
+	id, err := uuid.Parse(stringedId)
+	if err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusBadRequest)
+		return
+	}
 
-	// file,
+	object, objectName, err := h.service.GetTicket(id)
+	if err != nil {
+		http.Error(c.Writer, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer object.Close()
+
+	// Устанавливаем правильные HTTP-заголовки для PDF
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Disposition", fmt.Sprintf("inline; filename=%s", objectName))
+
+	// Отправляем PDF файл как поток, используя io.Copy
+	_, err = io.Copy(c.Writer, object)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Ошибка при отправке файла пользователю",
+		})
+		log.Fatalln(err)
+		return
+	}
 
 }
 

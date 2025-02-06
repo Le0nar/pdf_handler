@@ -8,7 +8,6 @@ import (
 )
 
 const bucketName = "my-bucket"
-const objectName = "my-object"
 
 func initS3Storage() *minio.Client {
 	// Параметры подключения
@@ -51,4 +50,8 @@ func initS3Storage() *minio.Client {
 	}
 
 	return client
+}
+
+func getObjectName(id string) string {
+	return "/ticket_" + id + ".pdf"
 }
