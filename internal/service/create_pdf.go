@@ -8,6 +8,8 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
+const tempDir = "temp_storage"
+
 // Функция для создания PDF на основе данных Ticket
 func CreatePDF(ticket ticket.Ticket) error {
 	// Создаем новый объект PDF
@@ -42,10 +44,10 @@ func CreatePDF(ticket ticket.Ticket) error {
 	pdf.Cell(0, 10, fmt.Sprintf("Price: $%.2f", ticket.Price))
 
 	// Создаем папку для временного хранения
-	_, err := os.Stat("temp_storage")
+	_, err := os.Stat(tempDir)
 	if os.IsNotExist(err) {
 		// Папка не существует, создаем ее
-		err := os.Mkdir("temp_storage", 0755)
+		err := os.Mkdir(tempDir, 0755)
 		if err != nil {
 			fmt.Println("Ошибка при создании папки:", err)
 		}
@@ -56,10 +58,15 @@ func CreatePDF(ticket ticket.Ticket) error {
 	}
 
 	// Сохраняем PDF в файл
-	err = pdf.OutputFileAndClose("temp_storage/ticket_" + ticket.ID.String() + ".pdf")
+	ticketFileName := getTicketFileName(ticket.ID.String())
+	err = pdf.OutputFileAndClose(ticketFileName)
 	if err != nil {
 		return fmt.Errorf("error saving PDF: %w", err)
 	}
 
 	return nil
+}
+
+func getTicketFileName(id string) string {
+	return tempDir + "/ticket_" + id + ".pdf"
 }
