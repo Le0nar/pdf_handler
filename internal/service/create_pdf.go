@@ -1,8 +1,8 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
-	"os"
 
 	"github.com/Le0nar/pdf_handler/internal/ticket"
 	"github.com/jung-kurt/gofpdf"
@@ -11,7 +11,7 @@ import (
 const tempDir = "temp_storage"
 
 // Функция для создания PDF на основе данных Ticket
-func CreatePDF(ticket ticket.Ticket) error {
+func CreatePDF(ticket ticket.Ticket) (*bytes.Buffer, error) {
 	// Создаем новый объект PDF
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.AddPage()
@@ -43,28 +43,13 @@ func CreatePDF(ticket ticket.Ticket) error {
 	pdf.Ln(8)
 	pdf.Cell(0, 10, fmt.Sprintf("Price: $%.2f", ticket.Price))
 
-	// Создаем папку для временного хранения
-	_, err := os.Stat(tempDir)
-	if os.IsNotExist(err) {
-		// Папка не существует, создаем ее
-		err := os.Mkdir(tempDir, 0755)
-		if err != nil {
-			fmt.Println("Ошибка при создании папки:", err)
-		}
-		fmt.Println("Папка успешно создана!")
-	} else if err != nil {
-		// Если возникла другая ошибка
-		fmt.Println("Ошибка при проверке папки:", err)
-	}
-
-	// Сохраняем PDF в файл
-	ticketFileName := getTicketFileName(ticket.ID.String())
-	err = pdf.OutputFileAndClose(ticketFileName)
+	// Генерация PDF в оперативной памяти
+	var buf bytes.Buffer
+	err := pdf.Output(&buf)
 	if err != nil {
-		return fmt.Errorf("error saving PDF: %w", err)
+		return nil, err
 	}
-
-	return nil
+	return &buf, nil
 }
 
 func getTicketFileName(id string) string {

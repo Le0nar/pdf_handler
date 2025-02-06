@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/Le0nar/pdf_handler/internal/ticket"
@@ -62,8 +61,6 @@ func (h *Handler) CreateTicket(c *gin.Context) {
 }
 
 func (h *Handler) GetTicket(c *gin.Context) {
-	// TODO: придумать как корерктно отдать файл
-
 	stringedId := c.Param("id")
 
 	id, err := uuid.Parse(stringedId)
@@ -90,7 +87,6 @@ func (h *Handler) GetTicket(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Ошибка при отправке файла пользователю",
 		})
-		log.Fatalln(err)
 		return
 	}
 
